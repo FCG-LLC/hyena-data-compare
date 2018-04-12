@@ -5,8 +5,6 @@ development/testing pipeline.
 
 ## Usage
 
-FIXME: explanation
-
     $ java -jar target/uberjar/data-compare-0.1.0-SNAPSHOT-standalone.jar [args]
     where args are:
     -h, --help           Print this help

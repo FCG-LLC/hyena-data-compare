@@ -1,7 +1,7 @@
 (ns data-compare.jdbc
-  (require [clojure.java.jdbc :as javajdbc]))
+  (require [clojure.java.jdbc :as j]))
 
 (defn query [db sql]
-  (let [stmt (.createStatement (javajdbc/get-connection db))]
+  (let [stmt (.createStatement (j/get-connection db))]
     (.execute stmt sql)
-    (javajdbc/result-set-seq (.getResultSet stmt))))
+    (j/result-set-seq (.getResultSet stmt))))

@@ -1,13 +1,16 @@
 (ns data-compare.drill
   (:require [data-compare.schema :refer [Query db-fields extract-data]]))
 
-(def db {:classname "org.apache.drill.jdbc.Driver" 
-         :subprotocol "drill" 
-         :subname "drillbit=drill:31010"})
+(def db-template {:classname "org.apache.drill.jdbc.Driver" 
+                  :subprotocol "drill" 
+                  :subname "drillbit=drill:31010"})
 
-(def scl-db {:classname "org.apache.drill.jdbc.Driver" 
-         :subprotocol "drill" 
-         :subname "drillbit=cskudu:31010"})
+(defn db 
+  ([] (db nil))
+  ([address]
+   (if (nil? address)
+     db-template
+     (assoc db-template :subname (str "drillbit=" address)))))
 
 (defn- create-data-row [hyena-fields row]
   (map #(extract-data %1 row) hyena-fields))
@@ -29,6 +32,4 @@
               " limit 1"
               ))
       (process-data [_ rows]
-        (map #(create-data-row drills %1) rows)
-        )
-      )))
+        (map #(create-data-row drills %1) rows)))))

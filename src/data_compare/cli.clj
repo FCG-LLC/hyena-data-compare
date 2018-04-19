@@ -12,7 +12,9 @@
    ["-x" "--max TIMESTAMP" "Upper bound for timestamps"
     :parse-fn #(Long/parseLong %)
     :validate [positive? "Min timestamp cannot be negative"]]
-   ["-f" "--file FILENAME" "Name of the file describing data columns"]])
+   ["-f" "--file FILENAME" "Name of the file describing data columns"]
+   ["-d" "--drill DRILL_ADDRESS" "Address of the drill server"]
+   ["-p" "--presto PRESTO_ADDRESS" "Address of the presto server"]])
 
 (defn- print-help-and-exit! [summary]
   (println summary)
@@ -49,10 +51,9 @@
     (< (:max options) (:min options))
     (do
       (println "Min TS must be at lower or equal to max TS!")
-      (System/exit 1))
-    )
+      (System/exit 1)))
   options)
 
 (defn parse [args]
   (let [opts (parse-opts args options)]
-      (verify opts)))
+    (verify opts)))

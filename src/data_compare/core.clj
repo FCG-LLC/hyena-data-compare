@@ -25,9 +25,11 @@
         filename (:file opts)
         schm     (schema/parse (slurp filename))
         p-query  (presto/schema->Query schm)
-        p-data   (jdbc/query presto/db (schema/query p-query min-ts max-ts))
+        _        (println "Running" (schema/query p-query min-ts max-ts) "on" (:subname (presto/db (:presto opts))))
+        p-data   (jdbc/query (presto/db (:presto opts)) (schema/query p-query min-ts max-ts))
         d-query  (drill/schema->Query schm)
-        d-data   (jdbc/query drill/db (schema/query d-query min-ts max-ts))
+        _        (println "Running" (schema/query d-query min-ts max-ts) "on" (:subname (drill/db (:drill opts))))
+        d-data   (jdbc/query (drill/db (:drill opts)) (schema/query d-query min-ts max-ts))
         ]
     (println (schema/query d-query min-ts max-ts))
     (verify schm p-data d-data))

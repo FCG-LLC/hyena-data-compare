@@ -61,6 +61,6 @@
   (map-indexed create-pair (csv/read-csv text)))
 
 (defn verify-row [schema hyena-row kudu-row]
-  (let [hyena-values (map #(extract-data hyena-row) (map :hyena schema))
-        kudu-values (map #(extract-data kudu-row) (map :kudu schema))]
+  (let [hyena-values (map #(extract-data %1 hyena-row) (map :hyena schema))
+        kudu-values (map #(extract-data %1 kudu-row) (map :kudu schema))]
     (= hyena-values kudu-values)))

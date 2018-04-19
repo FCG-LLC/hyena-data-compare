@@ -2,15 +2,17 @@
   (:require [data-compare.schema :refer [Query db-fields extract-data]]
             [clojure.string :as string]))
 
-(def db {:classname "com.facebook.presto.jdbc.PrestoDriver"
-         :subprotocol "presto"
-         :subname "//localhost:8080/hyena/hyena"
-         :user "not important"})
+(def db-template {:classname "com.facebook.presto.jdbc.PrestoDriver"
+                  :subprotocol "presto"
+                  :subname "//localhost:8080/hyena/hyena"
+                  :user "not important"})
 
-(def scl-db {:classname "com.facebook.presto.jdbc.PrestoDriver"
-         :subprotocol "presto"
-         :subname "//cskudu:8040/hyena/hyena"
-         :user "not important"})
+(defn db 
+  ([] (db nil))
+  ([address]
+   (if (nil? address)
+     db-template
+     (assoc db-template :subname (str "//" address "/hyena/hyena")))))
 
 (defn- create-data-row [hyena-fields row]
   (map #(extract-data %1 row) hyena-fields))
@@ -28,6 +30,4 @@
               ;" limit 1"
               ))
       (process-data [_ rows]
-        (map #(create-data-row hyenas %1) rows)
-        )
-      )))
+        (map #(create-data-row hyenas %1) rows)))))

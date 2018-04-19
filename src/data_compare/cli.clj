@@ -14,7 +14,9 @@
     :validate [positive? "Min timestamp cannot be negative"]]
    ["-f" "--file FILENAME" "Name of the file describing data columns"]
    ["-d" "--drill DRILL_ADDRESS" "Address of the drill server"]
-   ["-p" "--presto PRESTO_ADDRESS" "Address of the presto server"]])
+   ["-p" "--presto PRESTO_ADDRESS" "Address of the presto server"]
+   [nil "--no-drill" "Don't run a Drill query" :default false]
+   [nil "--no-presto" "Don't run a Presto query" :default false]])
 
 (defn- print-help-and-exit! [summary]
   (println summary)

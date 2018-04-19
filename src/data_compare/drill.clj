@@ -1,5 +1,6 @@
 (ns data-compare.drill
-  (:require [data-compare.schema :refer [Query db-fields extract-data]]))
+  (:require [data-compare.schema :refer [Query db-fields extract-data]]
+            [clojure.string :as string]))
 
 (def db-template {:classname "org.apache.drill.jdbc.Driver" 
                   :subprotocol "drill" 
@@ -19,6 +20,9 @@
   (let [drills (map :kudu schema)
         tables (into #{} (map :table drills))
         table (first tables)
+        table-no-kudu (if (string/starts-with? table "kudu.")
+                        (subs table 5)
+                        table)
         fields (flatten (map #(db-fields (:kudu %1)) schema))]
     (when (> (count tables) 1)
       (throw (Exception. (str "All kudu fields should come from one table. However, " (count tables) " tables found: " (map str tables)))))
@@ -27,8 +31,8 @@
         (str "select "
               (reduce #(str %1 ", " %2) fields)
               " from " table
-              " where time_stamp_ms >= " (long (/ min-ts 1000))
-;              " and hyena.cs.timestamp <= " max-ts
+              " where " table-no-kudu ".time_stamp_bucket >= " (int (/ min-ts 1000000))
+              "  and " table-no-kudu ".time_stamp_bucket <= " (int (/ max-ts 1000000))
               " limit 1"
               ))
       (process-data [_ rows]

@@ -16,7 +16,8 @@
    ["-d" "--drill DRILL_ADDRESS" "Address of the drill server"]
    ["-p" "--presto PRESTO_ADDRESS" "Address of the presto server"]
    [nil "--no-drill" "Don't run a Drill query" :default false]
-   [nil "--no-presto" "Don't run a Presto query" :default false]])
+   [nil "--no-presto" "Don't run a Presto query" :default false]
+   [nil "--print-results" "Print the query results on the console" :default false]])
 
 (defn- print-help-and-exit! [summary]
   (println summary)

@@ -1,0 +1,11 @@
+# Four fields contain:
+# * Hyena field(s)
+# * Drill field(s)
+# * Hyena value transformer (optional)
+# * Drill value transformer (optional)
+
+timestamp,"kudu.packet_headers.time_stamp_bucket,kudu.packet_headers.time_stamp_remainder",,:timestamp
+"server_ip1, server_ip2","kudu.packet_headers.server_ip1, kudu.packet_headers.server_ip2",:ip,:ip
+server_port,kudu.packet_headers.server_port
+proto,kudu.packet_headers.proto
+payload_len,kudu.packet_headers.payload_len

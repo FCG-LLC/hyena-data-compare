@@ -10,9 +10,11 @@
            [clojure.pprint :as pp])
   (:gen-class))
 
+(defonce opts (atom {}))
+
 (defn- verify-one [query presto-row drill-row]
   (let [rows-match (schema/verify-row presto-row drill-row)]
-    (when (not rows-match)
+    (when (and (:verbose @opts) (not rows-match))
       (println "Rows does not match!")
       (println "Presto row:" presto-row)
       (println "drill  row:" drill-row))
@@ -21,7 +23,7 @@
 (defn- verify [query presto-data drill-data]
   (let [verified-rows (map #(verify-one query %1 %2) presto-data drill-data)
         amounts-equal (= (count presto-data) (count drill-data))]
-    (when (not amounts-equal)
+    (when (and (:verbose @opts) (not amounts-equal))
       (println "Number of data rows do not match. Presto:" (count presto-data) "Drill:" (count drill-data)))
     (cond
       (and (= 0 (count presto-data))
@@ -38,7 +40,7 @@
         amounts-equal)))) 
 
 (defn- build-pairs [list]
-  "[1 2 3 4] -> [[1 2] [2 3] [3 4]]"
+  "Group items pair-wise: [1 2 3 4] -> [[1 2] [2 3] [3 4]]"
   (map vector list (rest list)))
 
 (defn calculate-intervals [min-ts max-ts interval]
@@ -46,33 +48,34 @@
     (build-pairs intervals)))
 
 (defn run-query [db q min-ts max-ts]
-  (println "Running" (schema/query q min-ts max-ts) "on" (:subname db))
+  (when (:verbose @opts)
+    (println "Running" (schema/query q min-ts max-ts) "on" (:subname db)))
   (schema/process-data q (jdbc/query db (schema/query q min-ts max-ts)))
   )
 
-(defn- run-and-verify [schema [min-ts max-ts] opts]
+(defn- run-and-verify [schema [min-ts max-ts]]
   (let [p-query (presto/schema->Query schema)
         d-query (drill/schema->Query schema)
-        p-data (run-query (presto/db (:presto opts)) p-query (c/to-long min-ts) (c/to-long max-ts))
-        d-data (run-query (drill/db (:drill opts)) d-query (c/to-long min-ts) (c/to-long max-ts))
+        p-data (run-query (presto/db (:presto @opts)) p-query (c/to-long min-ts) (c/to-long max-ts))
+        d-data (run-query (drill/db (:drill @opts)) d-query (c/to-long min-ts) (c/to-long max-ts))
         ]
-    (when (:print-results opts)
-      (when-not (:no-presto opts)
+    (when (:print-results @opts)
+      (when-not (:no-presto @opts)
         (println "Presto results\n")
         (pp/pprint p-data)
         (println "--------------"))
-      (when-not (:no-drill opts)
+      (when-not (:no-drill @opts)
         (println "Drill results\n")
         (pp/pprint d-data)))
     (verify schema p-data d-data)))
 
 (defn -main
   [& args]
-  (let [opts (cli/parse args)
-        filename (:file opts)
+  (reset! opts (cli/parse args))
+  (let [filename (:file @opts)
         schm     (schema/parse (slurp filename))
-        intervals (calculate-intervals (:min opts) (:max opts) (:interval opts))
-        results (doall (map #(run-and-verify schm %1 opts) intervals))
+        intervals (calculate-intervals (:min @opts) (:max @opts) (:interval @opts))
+        results (doall (map #(run-and-verify schm %1) intervals))
         return-code (if (every? identity results) 0 1)]
     (when (= 1 return-code)
       (println "FAIL: Data is not the same!"))

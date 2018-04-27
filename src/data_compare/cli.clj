@@ -20,7 +20,8 @@
     :parse-fn #(t/seconds (Long/parseLong %))]
    [nil "--no-drill" "Don't run a Drill query" :default false]
    [nil "--no-presto" "Don't run a Presto query" :default false]
-   [nil "--print-results" "Print the query results on the console" :default false]])
+   [nil "--print-results" "Print the query results on the console" :default false]
+   ["-v" "--verbose" "Run with more output" :default false]])
 
 (defn- print-help-and-exit! [summary]
   (println summary)

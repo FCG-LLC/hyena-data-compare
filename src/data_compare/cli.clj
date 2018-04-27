@@ -1,20 +1,23 @@
 (ns data-compare.cli
-  (:require [clojure.tools.cli :refer [parse-opts]]))
+  (:require [clojure.tools.cli :refer [parse-opts]]
+            [clj-time.coerce :as c]
+            [clj-time.core :as t]))
 
 (defn- positive? [x]
   (>= x 0))
 
 (def options
   [["-h" "--help" "Print this help"]
-   ["-m" "--min TIMESTAMP" "Lower bound for timestamps"
-    :parse-fn #(Long/parseLong %)
-    :validate [positive? "Min timestamp cannot be negative"]]
-   ["-x" "--max TIMESTAMP" "Upper bound for timestamps"
-    :parse-fn #(Long/parseLong %)
-    :validate [positive? "Min timestamp cannot be negative"]]
-   ["-f" "--file FILENAME" "Name of the file describing data columns"]
+   ["-m" "--min TIMESTAMP" "Lower bound for timestamps (in milliseconds)" 
+    :parse-fn #(c/from-long (Long/parseLong %))]
+   ["-x" "--max TIMESTAMP" "Upper bound for timestamps (in milliseconds)"
+    :parse-fn #(c/from-long (Long/parseLong %))]
+   ["-f" "--file FILENAME" "Name of the file describing data columns" :default "schema.csv"]
    ["-d" "--drill DRILL_ADDRESS" "Address of the drill server"]
    ["-p" "--presto PRESTO_ADDRESS" "Address of the presto server"]
+   ["-i" "--interval INTERVAL" "Interval for a single query (in seconds)" 
+    :default (t/seconds 30)
+    :parse-fn #(t/seconds (Long/parseLong %))]
    [nil "--no-drill" "Don't run a Drill query" :default false]
    [nil "--no-presto" "Don't run a Presto query" :default false]
    [nil "--print-results" "Print the query results on the console" :default false]])
@@ -51,7 +54,7 @@
       (required! :file) 
       (print-help-and-exit! summary))
 
-    (< (:max options) (:min options))
+    (t/before? (:max options) (:min options))
     (do
       (println "Min TS must be at lower or equal to max TS!")
       (System/exit 1)))

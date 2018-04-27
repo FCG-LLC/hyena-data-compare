@@ -25,8 +25,9 @@
         (str "select "
               (reduce #(str %1 ", " %2) fields)
               " from hyena.cs"
-              " where hyena.cs.timestamp >= " min-ts
-;              " and hyena.cs.timestamp <= " max-ts
+              " where hyena.cs.timestamp >= " (* min-ts 1000)
+;              " and hyena.cs.timestamp <= " (* max-ts 1000)
+              " order by hyena.cs.timestamp"
               ;" limit 1"
               ))
       (process-data [_ rows]

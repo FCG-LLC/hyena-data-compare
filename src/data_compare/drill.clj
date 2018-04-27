@@ -31,9 +31,10 @@
         (str "select "
               (reduce #(str %1 ", " %2) fields)
               " from " table
-              " where " table-no-kudu ".time_stamp_bucket >= " (int (/ min-ts 1000000))
-              "  and " table-no-kudu ".time_stamp_bucket <= " (int (/ max-ts 1000000))
-              " limit 1"
+              " where " table-no-kudu ".time_stamp_bucket >= " (int (/ min-ts 1000))
+              "  and " table-no-kudu ".time_stamp_bucket <= " (int (/ max-ts 1000))
+              " order by " table-no-kudu ".time_stamp_bucket, " table-no-kudu ".time_stamp_remainder"
+;              " limit 1"
               ))
       (process-data [_ rows]
         (map #(create-data-row drills %1) rows)))))

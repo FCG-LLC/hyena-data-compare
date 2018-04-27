@@ -11,22 +11,27 @@
   (db-fields [field] "Returns database fields")
   (extract-data [field row] "From row takes any data it needs"))
 
+(defn- extract-it [fields-map transform-fn row]
+  (let [fields (sort (keys fields-map))
+        values (map (fn [key] (key row)) fields)
+        value  (if-not (nil? transform-fn)
+                 (apply transform-fn values)
+                 values)]
+    (if (and (sequential? value) (= 1 (count value)))
+      (first value)
+      value)))
+
 (defrecord KuduField [table fields-map transform-fn]
   Field
   (db-fields [field]
     (map (fn [[id field]] (str field " AS " (name id))) fields-map))
-  (extract-data [field row]
-    (let [fields (sort (keys fields-map))
-          values (map (fn [key] (key row)) fields)
-          value  (if-not (nil? transform-fn)
-                   (apply transform-fn values)
-                   values)]
-      (if (and (sequential? value) (= 1 (count value)))
-        (first value)
-        value))))
+  (extract-data [_ row]
+    (extract-it fields-map transform-fn row)))
 
 (defn- kudu-timestamp [bucket remainder]
-  (+ (* bucket 1000000) remainder))
+  (if (nil? bucket)
+    nil
+    (+ (* bucket 1000000) (or remainder 0))))
 
 (defn- apply-masks [number masks shifts]
   (map #(bit-shift-right (bit-and %1 number) %2) masks shifts))
@@ -83,10 +88,8 @@
   Field
   (db-fields [self]
     (map (fn [[id field]] (str field " AS " (name id))) fields-map))
-  (extract-data [self row]
-    (let [fields-map (:fields-map self)
-          fields (keys fields-map)]
-      (into {} (map (fn [key] [(transform-fn (key fields-map)) (key row)]) fields)))))
+  (extract-data [_ row]
+    (extract-it fields-map transform-fn row)))
 
 (defonce hyena-transforms
   {:ip long-pair-to-ip})
@@ -94,7 +97,7 @@
 (defn- create-hyena-field [id item transform]
   (let [field-pairs (map-indexed #(create-field-pair id %1 %2) (string/split item #","))
         field-map (apply hash-map (flatten field-pairs))]
-    (->HyenaField field-map (get hyena-transforms transform))))
+    (->HyenaField field-map (get hyena-transforms transform identity))))
 
 (defrecord Pair [hyena kudu])
 
@@ -118,7 +121,5 @@
 (defn parse [text]
   (map-indexed create-pair (csv/read-csv (clean-csv-file text))))
 
-(defn verify-row [schema hyena-row kudu-row]
-  (let [hyena-values (map #(extract-data %1 hyena-row) (map :hyena schema))
-        kudu-values (map #(extract-data %1 kudu-row) (map :kudu schema))]
-    (= hyena-values kudu-values)))
+(defn verify-row [hyena-row kudu-row]
+  (= hyena-row kudu-row))

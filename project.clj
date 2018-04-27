@@ -9,7 +9,8 @@
                  [org.clojure/data.csv "0.1.4"]
                  [org.apache.drill/drill-common "1.12.0"]
                  [org.apache.drill.exec/drill-jdbc-all "1.12.0"]
-                 [com.facebook.presto/presto-jdbc "0.192"]]
+                 [com.facebook.presto/presto-jdbc "0.192"]
+                 [clj-time "0.14.3"]]
   :main ^:skip-aot data-compare.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

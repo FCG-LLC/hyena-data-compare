@@ -6,6 +6,10 @@
 (defn- positive? [x]
   (>= x 0))
 
+(defmacro when-verbose [verbosity opts & body]
+  `(when (>= (:verbose (deref ~opts)) ~verbosity)
+    ~@body))
+
 (def options
   [["-h" "--help" "Print this help"]
    ["-m" "--min TIMESTAMP" "Lower bound for timestamps (in milliseconds)" 
@@ -21,7 +25,9 @@
    [nil "--no-drill" "Don't run a Drill query" :default false]
    [nil "--no-presto" "Don't run a Presto query" :default false]
    [nil "--print-results" "Print the query results on the console" :default false]
-   ["-v" "--verbose" "Run with more output" :default false]])
+   ["-v" "--verbose" "Run with more output" 
+    :default 0 
+    :assoc-fn (fn [m k _] (update-in m [k] inc))]])
 
 (defn- print-help-and-exit! [summary]
   (println summary)

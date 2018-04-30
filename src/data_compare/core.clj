@@ -2,7 +2,7 @@
   (require [data-compare.jdbc :as jdbc]
            [data-compare.drill :as drill]
            [data-compare.presto :as presto]
-           [data-compare.cli :as cli]
+           [data-compare.cli :as cli :refer [when-verbose]]
            [data-compare.schema :as schema]
            [clj-time.core :as t]
            [clj-time.periodic :as p]
@@ -14,16 +14,17 @@
 
 (defn- verify-one [query presto-row drill-row]
   (let [rows-match (schema/verify-row presto-row drill-row)]
-    (when (and (:verbose @opts) (not rows-match))
-      (println "Rows does not match!")
-      (println "Presto row:" presto-row)
-      (println "drill  row:" drill-row))
+    (when (not rows-match)
+      (when-verbose 2 opts
+        (println "Rows do not match!")
+        (println "Presto row:" presto-row)
+        (println "drill  row:" drill-row)))
     rows-match))
 
 (defn- verify [query presto-data drill-data]
   (let [verified-rows (map #(verify-one query %1 %2) presto-data drill-data)
         amounts-equal (= (count presto-data) (count drill-data))]
-    (when (and (:verbose @opts) (not amounts-equal))
+    (when (and (>= (:verbose @opts) 1) (not amounts-equal))
       (println "Number of data rows do not match. Presto:" (count presto-data) "Drill:" (count drill-data)))
     (cond
       (and (= 0 (count presto-data))
@@ -48,10 +49,9 @@
     (build-pairs intervals)))
 
 (defn run-query [db q min-ts max-ts]
-  (when (:verbose @opts)
+  (when-verbose 1 opts
     (println "Running" (schema/query q min-ts max-ts) "on" (:subname db)))
-  (schema/process-data q (jdbc/query db (schema/query q min-ts max-ts)))
-  )
+  (schema/process-data q (jdbc/query db (schema/query q min-ts max-ts))))
 
 (defn- run-and-verify [schema [min-ts max-ts]]
   (let [p-query (presto/schema->Query schema)

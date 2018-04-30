@@ -7,7 +7,8 @@
            [clj-time.core :as t]
            [clj-time.periodic :as p]
            [clj-time.coerce :as c]
-           [clojure.pprint :as pp])
+           [clojure.pprint :as pp]
+           [clojure.term.colors :as color])
   (:gen-class))
 
 (defonce opts (atom {}))
@@ -16,16 +17,21 @@
   (let [rows-match (schema/verify-row presto-row drill-row)]
     (when (not rows-match)
       (when-verbose 2 opts
-        (println "Rows do not match!")
-        (println "Presto row:" presto-row)
-        (println "drill  row:" drill-row)))
+        (println (color/red "Rows do not match!"))
+        (println (color/grey (color/bold "Presto row: " (into [] presto-row))))
+        (println (color/grey (color/bold "drill  row: " (into [] drill-row))))))
     rows-match))
 
 (defn- verify [query presto-data drill-data]
-  (let [verified-rows (map #(verify-one query %1 %2) presto-data drill-data)
+  (let [verified-rows (doall (map #(verify-one query %1 %2) presto-data drill-data))
+        matching (count (filter true? verified-rows))
+        not-matching (- (min (count presto-data) (count drill-data)) matching)
         amounts-equal (= (count presto-data) (count drill-data))]
     (when (and (>= (:verbose @opts) 1) (not amounts-equal))
-      (println "Number of data rows do not match. Presto:" (count presto-data) "Drill:" (count drill-data)))
+      (println (color/red "Number of data rows do not match.")
+               "Presto:" (color/bold (count presto-data)) "Drill:" (color/bold (count drill-data))))
+    (when-verbose 1 opts
+      (println "Matching rows:" matching "Not matching:" not-matching))
     (cond
       (and (= 0 (count presto-data))
            (= 0 (count drill-data)))
@@ -37,8 +43,8 @@
       :else
       (and 
         ;; ANDing in this order to compare all rows even if the number of rows don't match
-        (every? identity (doall verified-rows)) ;; It should rather be (apply and verified-rows) but `and` is a macro and can't be applied
-        amounts-equal)))) 
+        (every? identity verified-rows) ;; It should rather be (apply and verified-rows) but `and` is a macro and can't be applied
+        amounts-equal))))
 
 (defn- build-pairs [list]
   "Group items pair-wise: [1 2 3 4] -> [[1 2] [2 3] [3 4]]"
@@ -50,7 +56,7 @@
 
 (defn run-query [db q min-ts max-ts]
   (when-verbose 1 opts
-    (println "Running" (schema/query q min-ts max-ts) "on" (:subname db)))
+    (println (color/green "Running") (schema/query q min-ts max-ts) (color/green "on") (:subname db)))
   (schema/process-data q (jdbc/query db (schema/query q min-ts max-ts))))
 
 (defn- run-and-verify [schema [min-ts max-ts]]

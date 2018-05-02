@@ -32,7 +32,7 @@
               (reduce #(str %1 ", " %2) fields)
               " from " table
               " where " table-no-kudu ".time_stamp_bucket >= " (int (/ min-ts 1000))
-              "  and " table-no-kudu ".time_stamp_bucket <= " (int (/ max-ts 1000))
+              "  and " table-no-kudu ".time_stamp_bucket < " (int (/ max-ts 1000))
               " order by " table-no-kudu ".time_stamp_bucket, " table-no-kudu ".time_stamp_remainder"
               ))
       (process-data [_ rows]

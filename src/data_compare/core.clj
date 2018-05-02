@@ -12,6 +12,8 @@
   (:gen-class))
 
 (defonce opts (atom {}))
+(defonce total-presto (atom 0))
+(defonce total-drill (atom 0))
 
 (defn- verify-one [query presto-row drill-row]
   (let [rows-match (schema/verify-row presto-row drill-row)]
@@ -34,6 +36,8 @@
         matching (count (filter true? verified-rows))
         not-matching (- (min (count presto-data) (count drill-data)) matching)
         amounts-equal (= (count presto-data) (count drill-data))]
+    (swap! total-presto + (count presto-data))
+    (swap! total-drill + (count drill-data))
     (when (and (>= (:verbose @opts) 1) (not amounts-equal))
       (println (color/red "Number of data rows do not match.")
                "Presto:" (color/bold (count presto-data)) "Drill:" (color/bold (count drill-data))))
@@ -92,5 +96,6 @@
         return-code (if (every? identity results) 0 1)]
     (when (= 1 return-code)
       (println "FAIL: Data is not the same!"))
+    (println "Total rows: Presto:" @total-presto " drill:" @total-drill)
     (System/exit return-code)))
 

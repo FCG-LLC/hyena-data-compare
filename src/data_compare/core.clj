@@ -22,8 +22,15 @@
         (println (color/grey (color/bold "drill  row: " (into [] drill-row))))))
     rows-match))
 
+(defn- vectors->timestamp-map [presto-data drill-data]
+  "Merges two vectors of data into a single map mapping timestamp -> {:presto P :drill D}"
+  (let [presto-map (apply merge (map #(sorted-map (first %) {:presto %}) presto-data))
+        drill-map  (apply merge (map #(sorted-map (first %) {:drill %})  drill-data))]
+    (merge-with #(merge %1 %2) presto-map drill-map)))
+
 (defn- verify [query presto-data drill-data]
-  (let [verified-rows (doall (map #(verify-one query %1 %2) presto-data drill-data))
+  (let [by-timestamp (vectors->timestamp-map presto-data drill-data)
+        verified-rows (doall (map (fn [[_ {:keys [presto drill]}]] (verify-one query presto drill)) by-timestamp))
         matching (count (filter true? verified-rows))
         not-matching (- (min (count presto-data) (count drill-data)) matching)
         amounts-equal (= (count presto-data) (count drill-data))]

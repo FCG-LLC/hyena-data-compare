@@ -20,7 +20,6 @@
    ["-d" "--drill DRILL_ADDRESS" "Address of the drill server"]
    ["-p" "--presto PRESTO_ADDRESS" "Address of the presto server"]
    ["-i" "--interval INTERVAL" "Interval for a single query (in seconds)" 
-    :default (t/seconds 30)
     :parse-fn #(t/seconds (Long/parseLong %))]
    [nil "--no-drill" "Don't run a Drill query" :default false]
    [nil "--no-presto" "Don't run a Presto query" :default false]
@@ -35,6 +34,13 @@
 
 (defn- required! [opt]
   (println "Error:" (name opt) "is required."))
+
+
+(defn- add-default-interval [options]
+  (let [from-min-to-max (/ (- (c/to-long (:max options))
+                              (c/to-long (:min options)))
+                           1000)]
+    (merge {:interval (t/seconds from-min-to-max)} options)))
 
 (defn- verify [{:keys [options summary errors]}]
   (cond
@@ -69,4 +75,4 @@
 
 (defn parse [args]
   (let [opts (parse-opts args options)]
-    (verify opts)))
+    (add-default-interval (verify opts))))

@@ -1,0 +1,29 @@
+# Four fields contain:
+# * Hyena field(s)
+# * Drill field(s)
+# * Hyena value transformer (optional)
+# * Drill value transformer (optional)
+
+timestamp,"kudu.packet_headers.time_stamp_bucket,kudu.packet_headers.time_stamp_remainder",,:timestamp
+"server_ip1, server_ip2","kudu.packet_headers.server_ip1, kudu.packet_headers.server_ip2",:ip,:ip
+"client_ip1, client_ip2","kudu.packet_headers.client_ip1, kudu.packet_headers.client_ip2",:ip,:ip
+client_is_src,kudu.packet_headers.client_is_src,
+server_port,kudu.packet_headers.server_port
+proto,kudu.packet_headers.proto
+client_port,kudu.packet_headers.client_port
+#seq_num,kudu.packet_headers.seq_num
+#ack_num,kudu.packet_headers.ack_num
+payload_len,kudu.packet_headers.payload_len
+flags,kudu.packet_headers.flags
+client_mac,kudu.packet_headers.client_mac
+server_mac,kudu.packet_headers.server_mac
+ttl,kudu.packet_headers.ttl
+op1,kudu.packet_headers.op1
+op2,kudu.packet_headers.op2
+op3,kudu.packet_headers.op3
+op4,kudu.packet_headers.op4
+op5,kudu.packet_headers.op5
+direction_source,kudu.packet_headers.direction_source
+traffic_type,kudu.packet_headers.traffic_type
+retransmission,kudu.packet_headers.retransmission
+flow_id,kudu.packet_headers.flow_id

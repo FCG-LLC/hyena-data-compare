@@ -38,11 +38,12 @@
         amounts-equal (= (count presto-data) (count drill-data))]
     (swap! total-presto + (count presto-data))
     (swap! total-drill + (count drill-data))
-    (when (and (>= (:verbose @opts) 1) (not amounts-equal))
-      (println (color/red "Number of data rows do not match.")
-               "Presto:" (color/bold (count presto-data)) "Drill:" (color/bold (count drill-data))))
     (when-verbose 1 opts
-      (println "Matching rows:" matching "Not matching:" not-matching))
+      (when (not amounts-equal)
+        (println (color/red "Number of data rows do not match.")
+                 "Presto:" (color/bold (count presto-data)) "Drill:" (color/bold (count drill-data))))
+      (when (or (> matching 0) (> not-matching 0))
+        (println "Matching rows:" matching "Not matching:" not-matching)))
     (cond
       (and (= 0 (count presto-data))
            (= 0 (count drill-data)))
@@ -53,7 +54,7 @@
 
       :else
       (and 
-        ;; ANDing in this order to compare all rows even if the number of rows don't match
+        ;; ANDing in this order to compare all rows even if the number of rows doesn't match
         (every? identity verified-rows) ;; It should rather be (apply and verified-rows) but `and` is a macro and can't be applied
         amounts-equal))))
 

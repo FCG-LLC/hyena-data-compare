@@ -3,6 +3,10 @@
 This is a tool to compare data in Hyena and Presto. It is intended to be a part of the Hyena 
 development/testing pipeline.
 
+## Building
+
+    $ lein uberjar
+
 ## Usage
 
     $ java -jar target/uberjar/data-compare-0.1.0-SNAPSHOT-standalone.jar [args]

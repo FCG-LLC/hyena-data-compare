@@ -18,7 +18,7 @@
     :parse-fn #(c/from-long (Long/parseLong %))]
    ["-f" "--file FILENAME" "Name of the file describing data columns" :default "schema.csv"]
    ["-d" "--drill DRILL_ADDRESS" "Address of the drill server"]
-   ["-p" "--presto PRESTO_ADDRESS" "Address of the presto server"]
+   ["-p" "--presto PRESTO_ADDRESS:PRESTO_PORT" "Address of the presto server"]
    ["-i" "--interval INTERVAL" "Interval for a single query (in seconds)" 
     :parse-fn #(t/seconds (Long/parseLong %))]
    [nil "--no-drill" "Don't run a Drill query" :default false]
